@@ -81,7 +81,10 @@
             </button>
 
             <div id="preview" class="preview hidden">
-                <h2>Превью — проверьте и исправьте</h2>
+                <div class="preview-header">
+                    <h2>Превью — проверьте и исправьте</h2>
+                    <div class="preview-status" id="previewStatusBadge">🔵 Новая</div>
+                </div>
                 <p id="previewWarning" class="preview-warning hidden">Не все поля распознаны. Заполните пустые поля вручную или отправьте как есть.</p>
                 <div class="preview-fields">
                     <div class="preview-field" id="fieldName">
@@ -171,16 +174,12 @@
                     <input type="text" id="manualPrice" placeholder="например, 1500 грн / 100 €">
                 </div>
             </div>
-            <div class="form-group">
-                <label for="manualStatus">Статус</label>
-                <div class="input-icon-wrap">
-                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <select id="manualStatus">
-                        <option value="Новая" selected>Новая</option>
-                        <option value="В работе">В работе</option>
-                        <option value="Завершена">Завершена</option>
-                        <option value="Отменена">Отменена</option>
-                    </select>
+            <div class="form-group" style="animation-delay: 0.32s">
+                <label>Статус</label>
+                <div class="status-toggle" id="manualStatusToggle">
+                    <button type="button" class="status-btn active" data-status="Новая">🔵 Новая</button>
+                    <button type="button" class="status-btn" data-status="В работе">🟡 В работе</button>
+                    <button type="button" class="status-btn" data-status="Завершено">🟢 Завершено</button>
                 </div>
             </div>
 

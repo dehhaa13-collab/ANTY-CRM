@@ -117,6 +117,25 @@ parseBtn.addEventListener('click', () => {
     preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
+function updatePreviewStatus(status) {
+    const badge = document.getElementById('previewStatusBadge');
+    if (!badge) return;
+
+    badge.textContent = (status === 'В работе' ? '🟡 ' : status === 'Завершено' ? '🟢 ' : '🔵 ') + status;
+    
+    // Снимаем старые классы
+    badge.className = 'preview-status';
+    
+    // Добавляем специфичный класс если нужно (в CSS я сделал общие стили для синего, 
+    // давай добавим вариации в CSS или будем менять инлайном)
+    // Лучше добавим классы в CSS
+    badge.classList.add('status-' + (status === 'В работе' ? 'working' : status === 'Завершено' ? 'done' : 'new'));
+    
+    // Маленькая анимация
+    badge.style.transform = 'scale(1.1)';
+    setTimeout(() => badge.style.transform = 'scale(1)', 200);
+}
+
 function showPreview(data) {
     previewName.value = data.name || '';
     previewPhone.value = data.phone || '';
@@ -125,6 +144,9 @@ function showPreview(data) {
     previewProblem.value = data.problem || '';
     previewDate.value = data.visitDate || '';
     previewPrice.value = data.price || '';
+
+    // По умолчанию всегда "Новая" для вольной формы
+    updatePreviewStatus('Новая');
 
     highlightEmptyFields();
     preview.classList.remove('hidden');
@@ -192,6 +214,23 @@ addBtn.addEventListener('click', async () => {
 // РУЧНОЙ ВВОД
 // =============================================
 
+let manualStatusValue = 'Новая';
+const manualStatusBtns = document.querySelectorAll('#manualStatusToggle .status-btn');
+
+manualStatusBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.classList.contains('active')) return;
+        
+        manualStatusBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        manualStatusValue = btn.dataset.status;
+        
+        // Эффект "нажатия"
+        btn.style.transform = 'scale(0.95)';
+        setTimeout(() => btn.style.transform = 'scale(1.02)', 100);
+    });
+});
+
 const addBtnManual = document.getElementById('addBtnManual');
 
 addBtnManual.addEventListener('click', async () => {
@@ -202,7 +241,7 @@ addBtnManual.addEventListener('click', async () => {
     const problem = document.getElementById('manualProblem').value.trim();
     const visitDateRaw = document.getElementById('manualVisitDate').value;
     const price = document.getElementById('manualPrice').value.trim();
-    const statusVal = document.getElementById('manualStatus').value;
+    const statusVal = manualStatusValue;
 
     // Хотя бы одно поле должно быть заполнено
     if (!name && !phone && !car && !problem) {
@@ -234,7 +273,13 @@ addBtnManual.addEventListener('click', async () => {
         document.getElementById('manualProblem').value = '';
         document.getElementById('manualVisitDate').value = '';
         document.getElementById('manualPrice').value = '';
-        document.getElementById('manualStatus').value = 'Новая';
+        
+        // Сброс статуса
+        manualStatusValue = 'Новая';
+        manualStatusBtns.forEach(b => {
+            if (b.dataset.status === 'Новая') b.classList.add('active');
+            else b.classList.remove('active');
+        });
     }
 });
 
