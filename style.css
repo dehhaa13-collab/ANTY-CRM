@@ -887,6 +887,11 @@ html, body {
         margin-bottom: 5px;
     }
 
+    .input-icon-wrap {
+        overflow: hidden;
+        max-width: 100%;
+    }
+
     .input-icon-wrap input,
     .input-icon-wrap textarea,
     .input-icon-wrap select {
@@ -894,6 +899,8 @@ html, body {
         padding: 12px 12px 12px 40px;
         border-radius: 10px;
         min-height: 48px;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .input-icon {
@@ -909,9 +916,16 @@ html, body {
 
     /* Fix iOS date input overflow */
     .input-icon-wrap input[type="date"] {
+        -webkit-appearance: none;
+        appearance: none;
         min-width: 0;
+        width: 100%;
         max-width: 100%;
-        padding-right: 8px; /* Less padding since there's a native calendar icon */
+        box-sizing: border-box;
+        padding-left: 40px;
+        padding-right: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* --- Buttons: large touch targets --- */
