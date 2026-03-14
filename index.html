@@ -207,18 +207,23 @@
             updateIcon();
 
             btn.addEventListener('click', function() {
-                // Spin animation
-                btn.classList.add('spin');
-                setTimeout(function() { btn.classList.remove('spin'); }, 400);
+                // Add class to trigger fade out / scale down
+                btn.classList.add('switching');
 
-                // Toggle class
-                body.classList.toggle('dark');
+                // Wait for the first half of the animation
+                setTimeout(function() {
+                    // Toggle theme class
+                    body.classList.toggle('dark');
 
-                // Update icon
-                updateIcon();
+                    // Swap the emoji
+                    updateIcon();
 
-                // Save preference
-                localStorage.setItem('theme', body.classList.contains('dark') ? 'dark' : 'light');
+                    // Remove class to trigger fade in / scale up
+                    btn.classList.remove('switching');
+
+                    // Save preference
+                    localStorage.setItem('theme', body.classList.contains('dark') ? 'dark' : 'light');
+                }, 150); // Matches the CSS transition time
             });
         })();
     </script>
