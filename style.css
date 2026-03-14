@@ -907,6 +907,13 @@ html, body {
         padding-right: 34px;
     }
 
+    /* Fix iOS date input overflow */
+    .input-icon-wrap input[type="date"] {
+        min-width: 0;
+        max-width: 100%;
+        padding-right: 8px; /* Less padding since there's a native calendar icon */
+    }
+
     /* --- Buttons: large touch targets --- */
     .submit-btn {
         font-size: 16px;
