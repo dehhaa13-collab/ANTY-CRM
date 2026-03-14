@@ -830,6 +830,76 @@ body.dark .submit-btn:disabled {
 }
 
 /* =============================================
+   Flatpickr Calendar Styling
+   ============================================= */
+.flatpickr-calendar {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-card) !important;
+    color: var(--text-primary) !important;
+    font-family: inherit !important;
+    border-radius: 16px !important;
+    padding: 8px !important;
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-months .flatpickr-prev-month, 
+.flatpickr-months .flatpickr-next-month {
+    color: var(--text-primary) !important;
+    fill: var(--text-primary) !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: var(--bg-card) !important;
+}
+
+span.flatpickr-weekday {
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+}
+
+.flatpickr-day {
+    color: var(--text-primary) !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    margin-top: 2px !important;
+}
+
+.flatpickr-day:hover, 
+.flatpickr-day:focus {
+    background: var(--accent-light) !important;
+    border-color: transparent !important;
+    color: var(--accent) !important;
+}
+
+.flatpickr-day.selected, 
+.flatpickr-day.selected:hover, 
+.flatpickr-day.selected:focus {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 10px var(--accent-shadow) !important;
+}
+
+.flatpickr-day.today {
+    border-color: var(--accent) !important;
+}
+
+.flatpickr-calendar.arrowTop:before {
+    border-bottom-color: var(--border-color) !important;
+}
+.flatpickr-calendar.arrowTop:after {
+    border-bottom-color: var(--bg-card) !important;
+}
+.flatpickr-calendar.arrowBottom:before {
+    border-top-color: var(--border-color) !important;
+}
+.flatpickr-calendar.arrowBottom:after {
+    border-top-color: var(--bg-card) !important;
+}
+
+/* =============================================
    Responsive — Mobile (up to 768px)
    ============================================= */
 

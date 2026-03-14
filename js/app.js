@@ -11,6 +11,18 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmo-DrXxAGzs
 // --- Общие элементы ---
 const statusEl = document.getElementById('status');
 
+// --- Инициализация календаря ---
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof flatpickr !== 'undefined') {
+        flatpickr('.date-picker-input', {
+            locale: 'ru',
+            dateFormat: 'd.m.Y',
+            disableMobile: true, // чтобы на телефонах тоже был красивый UI, а не системное колесо
+            allowInput: true
+        });
+    }
+});
+
 // --- Toggle ---
 const toggleFree = document.getElementById('toggleFree');
 const toggleManual = document.getElementById('toggleManual');
@@ -198,12 +210,8 @@ addBtnManual.addEventListener('click', async () => {
         return;
     }
 
-    // Форматируем дату из input[type=date] (yyyy-mm-dd) в dd.mm.yyyy
-    let visitDate = '';
-    if (visitDateRaw) {
-        const parts = visitDateRaw.split('-');
-        visitDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
-    }
+    // Берём дату как есть (Она уже в формате dd.mm.yyyy из-за Flatpickr)
+    let visitDate = visitDateRaw;
 
     const payload = {
         date: formatDate(new Date()),
