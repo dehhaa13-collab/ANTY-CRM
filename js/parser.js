@@ -185,28 +185,36 @@ function parseText(text) {
 // =============================================================
 
 function extractPhone(text) {
-    // Убираем всё кроме цифр, +, пробелов, дефисов и скобок для поиска
+    // Упрощаем поиск: ищем блоки, которые содержат много цифр (от 9 до 13), 
+    // с возможными +, пробелами, скобками и дефисами между ними.
     const phonePatterns = [
-        // +380 (67) 123 45 67, +380671234567, +38 067 123 45 67
-        /\+?\d{1,3}[\s.-]?\(?\d{2,3}\)?[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}/,
-        // +359 88 123 4567 (Bulgaria)
-        /\+?359[\s.-]?\d{2}[\s.-]?\d{3}[\s.-]?\d{4}/,
-        /\+?359[\s.-]?\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}/,
-        // 0671234567 (local UA), 0887123456 (local BG)
-        /\b0\d{9}\b/,
-        // 067-123-45-67, 067 123 45 67
-        /\b0\d{2}[\s.-]?\d{3}[\s.-]?\d{2}[\s.-]?\d{2}\b/,
-        // Generic: 10-digit starting with reasonable prefix
-        /\b\d{10}\b/,
-        // 7-digit with dashes: 123-45-67
-        /\b\d{3}[\s.-]\d{2}[\s.-]\d{2}\b/,
+        // Универсальный шаблон для номеров с кодом и без, учитывающий странные пробелы, скобки, тире
+        // Ловит: +380 67 123 45 67 | 8(067)123-45-67 | 067  123  45  67
+        /(?:\+?[38]?[\s.-]*)?\(?0[\s.-]*\d{2}\)?[\s.-]*\d{3}[\s.-]*\d{2}[\s.-]*\d{2}/g,
+        /(?:\+?[38]?[\s.-]*)?0[\s.-]*\d{9}/g,
+        /(?:\+?359[\s.-]*)?\(?\d{2,3}\)?[\s.-]*\d{3}[\s.-]*\d{2}[\s.-]*\d{2}/g
     ];
 
+    let bestCandidate = '';
+    
     for (const pattern of phonePatterns) {
-        const match = text.match(pattern);
-        if (match) {
-            return normalizePhone(match[0].trim());
+        let match;
+        // Используем exec для поиска всех совпадений, если шаблон с флагом 'g'
+        while ((match = pattern.exec(text)) !== null) {
+            const raw = match[0];
+            const digits = raw.replace(/[^\d+]/g, '');
+            // Проверяем, что это не дата (слишком мало цифр) и похоже на телефон
+            if (digits.replace('+', '').length >= 9 && digits.replace('+', '').length <= 13) {
+                // Выбираем самый длинный (с кодом страны) если их несколько рядом
+                if (digits.length > bestCandidate.replace(/[^\d+]/g, '').length) {
+                    bestCandidate = raw;
+                }
+            }
         }
+    }
+    
+    if (bestCandidate) {
+        return normalizePhone(bestCandidate.trim());
     }
     return '';
 }
@@ -215,32 +223,32 @@ function normalizePhone(raw) {
     // Убираем всё кроме цифр и +
     let digits = raw.replace(/[^\d+]/g, '');
 
-    // Если начинается с +, оставляем как есть
+    // Если начинается с +, оставляем как есть, но форматируем
     if (digits.startsWith('+')) {
         return formatPhoneDisplay(digits);
     }
 
+    // Обработка номеров, начинающихся с 8 вместо 0 (8067... -> 067...)
+    if (digits.startsWith('80') && digits.length === 11) {
+        digits = digits.substring(1); // убираем 8, оставляем 0...
+    }
+
     // Украина: 0 -> +380
     if (digits.startsWith('0') && digits.length === 10) {
-        // Проверяем украинские коды (067, 050, 063, 066, 068, 073, 093, 095, 096, 097, 098, 099)
         const uaCode = digits.substring(1, 3);
-        const uaCodes = ['50', '63', '66', '67', '68', '73', '91', '92', '93', '94', '95', '96', '97', '98', '99'];
+        // Расширенный список украинских кодов
+        const uaCodes = ['39', '50', '63', '66', '67', '68', '73', '91', '92', '93', '94', '95', '96', '97', '98', '99'];
         if (uaCodes.includes(uaCode)) {
             digits = '+380' + digits.substring(1);
             return formatPhoneDisplay(digits);
         }
+        
         // Болгария: 0 -> +359
-        const bgCodes = ['87', '88', '89', '98', '43', '44'];
+        const bgCodes = ['87', '88', '89', '98', '43', '44', '2'];
         if (bgCodes.includes(uaCode)) {
             digits = '+359' + digits.substring(1);
             return formatPhoneDisplay(digits);
         }
-    }
-
-    // Болгария: 0 -> +359 (9-значные локальные)
-    if (digits.startsWith('0') && digits.length === 10) {
-        digits = '+359' + digits.substring(1);
-        return formatPhoneDisplay(digits);
     }
 
     // 380... без плюса
