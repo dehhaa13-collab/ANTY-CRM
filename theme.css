@@ -1,0 +1,93 @@
+/**
+ * theme.css — Visual enhancements on top of style.css.
+ * This file can be removed without losing functionality.
+ */
+
+/* --- Background pattern for depth --- */
+body {
+    background:
+        radial-gradient(circle at 20% 20%, rgba(108, 99, 255, 0.03), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 180, 100, 0.04), transparent 50%),
+        var(--bg-body);
+    transition: background 0.35s ease;
+}
+
+body.dark {
+    background:
+        radial-gradient(circle at 20% 20%, rgba(124, 115, 255, 0.06), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(80, 60, 200, 0.04), transparent 50%),
+        var(--bg-body);
+}
+
+/* --- Container: subtle inner glow --- */
+.container {
+    border: 1px solid var(--border-card);
+    transition: border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* --- Header icon: subtle breathing animation --- */
+.header-icon {
+    animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+/* --- Toggle: soft inner shadow --- */
+.toggle {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+body.dark .toggle {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Submit button: gradient shimmer on hover --- */
+.submit-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.submit-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.15),
+        transparent
+    );
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+
+.submit-btn:hover::after {
+    left: 100%;
+}
+
+/* --- Preview card: subtle background --- */
+.preview {
+    background: linear-gradient(180deg, var(--accent-light), transparent);
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 4px;
+    border-radius: 0 0 16px 16px;
+    transition: background 0.35s ease;
+}
+
+/* --- Status messages: icon before text --- */
+.status.success::before {
+    content: '✓ ';
+}
+
+.status.error::before {
+    content: '✕ ';
+}
