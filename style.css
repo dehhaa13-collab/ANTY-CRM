@@ -783,17 +783,37 @@ body.dark .submit-btn:disabled {
 }
 
 /* =============================================
-   Responsive
+   Responsive — Mobile (up to 768px)
    ============================================= */
-@media (max-width: 640px) {
-    .container {
-        margin: 16px;
-        padding: 24px 20px;
-        border-radius: 16px;
+
+/* Prevent horizontal overflow globally */
+html, body {
+    overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    /* --- Global mobile resets --- */
+    body {
+        font-size: 16px;
     }
 
+    /* --- Container --- */
+    .container {
+        margin: 16px;
+        padding: 24px 16px 24px;
+        border-radius: 16px;
+        max-width: 100%;
+    }
+
+    /* --- Header --- */
     h1 {
         font-size: 20px;
+    }
+
+    .header {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        gap: 12px;
     }
 
     .header-icon {
@@ -803,11 +823,188 @@ body.dark .submit-btn:disabled {
         border-radius: 12px;
     }
 
+    .header-subtitle {
+        font-size: 13px;
+    }
+
+    /* --- Theme toggle: stable position, no jumping --- */
     .theme-toggle {
+        position: fixed;
         top: 12px;
         right: 12px;
-        width: 38px;
-        height: 38px;
-        font-size: 17px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        z-index: 999;
+        /* Prevent layout shifts */
+        will-change: transform;
+    }
+
+    /* --- Mode toggle: bigger touch targets --- */
+    .toggle {
+        border-radius: 10px;
+        padding: 3px;
+        margin-bottom: 20px;
+    }
+
+    .toggle-btn {
+        padding: 12px 10px;
+        font-size: 14px;
+        min-height: 48px;
+        gap: 6px;
+    }
+
+    .toggle-btn svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .toggle-slider {
+        border-radius: 8px;
+    }
+
+    /* --- Section label --- */
+    .section-label {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    /* --- Textarea (free form) --- */
+    textarea {
+        font-size: 16px;
+        padding: 14px;
+        border-radius: 10px;
+        min-height: 140px;
+    }
+
+    /* --- Form inputs (manual entry) --- */
+    .form-group {
+        margin-bottom: 14px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .input-icon-wrap input,
+    .input-icon-wrap textarea,
+    .input-icon-wrap select {
+        font-size: 16px;
+        padding: 12px 12px 12px 40px;
+        border-radius: 10px;
+        min-height: 48px;
+    }
+
+    .input-icon {
+        left: 12px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .input-icon-wrap select {
+        background-position: right 12px center;
+        padding-right: 34px;
+    }
+
+    /* --- Buttons: large touch targets --- */
+    .submit-btn {
+        font-size: 16px;
+        padding: 14px 16px;
+        min-height: 48px;
+        border-radius: 12px;
+        margin-top: 14px;
+    }
+
+    /* --- Preview section --- */
+    .preview {
+        margin-top: 24px;
+        padding-top: 20px;
+    }
+
+    .preview h2 {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .preview-warning {
+        font-size: 13px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-bottom: 14px;
+    }
+
+    .preview-fields {
+        gap: 10px;
+    }
+
+    .preview-field label {
+        font-size: 11px;
+    }
+
+    .preview-field input {
+        font-size: 16px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        min-height: 44px;
+    }
+
+    .preview .submit-btn {
+        margin-top: 16px;
+    }
+
+    /* --- Status messages --- */
+    .status {
+        font-size: 14px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+
+    /* --- Loading overlay --- */
+    .loading-overlay {
+        padding: 16px;
+    }
+
+    .loading-card {
+        padding: 32px 24px;
+        border-radius: 16px;
+        max-width: calc(100vw - 32px);
+        width: 100%;
+    }
+
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+    }
+
+    .spinner-icon {
+        font-size: 24px;
+    }
+
+    .loading-text {
+        font-size: 15px;
+    }
+}
+
+/* --- Extra-small devices (< 380px) --- */
+@media (max-width: 380px) {
+    .container {
+        margin: 8px;
+        padding: 20px 12px;
+        border-radius: 14px;
+    }
+
+    h1 {
+        font-size: 18px;
+    }
+
+    .toggle-btn {
+        font-size: 13px;
+        padding: 10px 6px;
+    }
+
+    .loading-card {
+        padding: 28px 16px;
     }
 }
