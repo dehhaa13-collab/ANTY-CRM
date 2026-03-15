@@ -5,7 +5,7 @@
 
 // ====== КОНФИГУРАЦИЯ ======
 // Вставь сюда URL твоего Google Apps Script Web App
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmo-DrXxAGzsXqNLS0ohEKY1M-PFo1zzfZlRB8dH2h0rMsJ-JNBNwhZD8l6060sE7Ylw/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwcvjUnGGw9_TVaqjdPBlQAka5Q-Z36OgHcmokbGLzgdJxxfp8yRec0yk47pvBwUUAmoA/exec';
 // ==========================
 
 // =============================================
