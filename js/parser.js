@@ -81,7 +81,8 @@ const PROBLEM_KEYWORDS = [
     'запах', 'воняет', 'пахнет', 'неприятный запах', 'запах в салоне',
     'заправка кондиционера', 'заправка', 'дозаправка', 'перезаправка',
     'диагностика', 'проверка', 'осмотр',
-    'ремонт кондиционера', 'ремонт',
+    'ремонт кондиционера', 'ремонт', 'заменить', 'замена',
+    'вытек фреон', 'вытек',
     'компрессор', 'радиатор', 'конденсор', 'конденсатор', 'испаритель',
     'фреон', 'хладагент', 'газ вышел', 'утечка фреона', 'утечка',
     'трубка', 'шланг', 'муфта', 'подшипник', 'сальник', 'прокладка',
@@ -359,6 +360,14 @@ function extractCar(text) {
         }
     }
 
+    // Собираем отдельные слова известных брендов (для отсечки другой машины)
+    let brandWords = new Set();
+    for (const brand of CAR_BRANDS) {
+        for (const name of brand.names) {
+            brandWords.add(name.toLowerCase());
+        }
+    }
+
     for (let i = 0; i < Math.min(3, wordsAfter.length); i++) {
         const word = wordsAfter[i];
         const wordLower = word.toLowerCase();
@@ -369,16 +378,23 @@ function extractCar(text) {
         // Телефон или дата
         if (/^\+?\d{5,}$/.test(wordLower) || /\d{1,2}[./-]\d{1,2}/.test(wordLower)) break;
 
+        // Номер авто (грубая проверка)
+        if (/^[a-zа-яіїєґ0-9]{4,8}$/i.test(word) && /\d{3,4}/.test(word) && /[a-zа-яіїєґ]/i.test(word)) break;
+        if (/^[a-zа-яіїєґ]{4}$/i.test(word) && /^[A-ZА-ЯІЇЄҐ]+$/.test(word)) break;
+
         // Стоп-слово или имя
         if (allStopWords.includes(wordLower)) break;
         
-        // Слово, относящееся к проблеме ("стучит", "компрессор", "течет")
-        if (problemWords.has(wordLower)) break;
+        // Слово, относящееся к проблеме ("стучит", "компрессор", "течет", "сломалась", "гудит", "проблема")
+        if (problemWords.has(wordLower) || /^(сломалась|сломался|сломалось|проблема|жалоба|не)$/.test(wordLower)) break;
+        
+        // Другая марка автомобиля
+        if (brandWords.has(wordLower)) break;
         
         modelParts.push(word);
         
         // Если слово содержит цифры (например A4, X5) - обычно это вся модель, можно остановиться,
-        // но иногда бывает "Passat B8", так что берем до 2-3 слов.
+        // но иногда бывает "Passat B8" или "Land Cruiser 200", поэтому не останавливаем жестко если это не выглядит как год.
     }
 
     const model = modelParts.join(' ');
@@ -424,18 +440,6 @@ function extractProblem(text, parsed) {
         }
     }
     
-    // Убираем авто
-    if (parsed && parsed.car) {
-        lower = lower.replace(new RegExp(escapeRegex(parsed.car.toLowerCase()), 'gi'), ',');
-        for (const brand of CAR_BRANDS) {
-            for (const name of brand.names) {
-                if (lower.includes(name)) {
-                    lower = lower.replace(new RegExp(escapeRegex(name), 'gi'), ',');
-                }
-            }
-        }
-    }
-    
     // Убираем маркеры дат
     const dateStopWords = ['сегодня', 'завтра', 'послезавтра', 'сьогодні', 'через'];
     for (const word of dateStopWords) {
@@ -462,7 +466,27 @@ function extractProblem(text, parsed) {
                     prev = cleanPart;
                     cleanPart = cleanPart.replace(problemLeadClean, '').trim();
                 }
+
+                // Убираем номер авто если он сюда попал
+                if (parsed.plate && cleanPart.toLowerCase().includes(parsed.plate.toLowerCase())) {
+                    cleanPart = cleanPart.replace(new RegExp(escapeRegex(parsed.plate), 'gi'), '').trim();
+                }
                 
+                // Убираем марку и модель авто если попала в проблему
+                if (parsed.car) {
+                    const carParts = parsed.car.split(/\s+/);
+                    for (const cp of carParts) {
+                         if (cp.length > 2) {
+                             cleanPart = cleanPart.replace(new RegExp('\\b' + escapeRegex(cp) + '\\b', 'gi'), '').trim();
+                         }
+                    }
+                    for (const brand of CAR_BRANDS) {
+                        for (const name of brand.names) {
+                            cleanPart = cleanPart.replace(new RegExp('\\b' + escapeRegex(name) + '\\b', 'gi'), '').trim();
+                        }
+                    }
+                }
+
                 // Убираем известные имена из начала фразы
                 const firstWord = cleanPart.split(/\s+/)[0];
                 if (firstWord && COMMON_NAMES.includes(firstWord.toLowerCase())) {
@@ -470,10 +494,14 @@ function extractProblem(text, parsed) {
                 }
                 
                 // Убираем предлоги/частицы оставшиеся в начале
-                cleanPart = cleanPart.replace(/^(?:с|на|к|от|за|по|у|в|что|насчет|насчёт|із|про)\s+/gi, '').trim();
+                cleanPart = cleanPart.replace(/^(?:с|на|к|от|за|по|у|в|что|насчет|насчёт|із|про|госномер|номер)\s+/gi, '').trim();
                 
                 // Убираем "проблемой —" и подобное
                 cleanPart = cleanPart.replace(/^(?:проблемой|проблема|жалобой)\s*[—–-]?\s*/gi, '').trim();
+
+                // Очистка от остаточного мусора (например "госномер")
+                cleanPart = cleanPart.replace(/(^|\s)(госномер|номер|авто|машина|тачка|тачку|машину)(\s|$)/gi, ' ').trim();
+                cleanPart = cleanPart.replace(/\s{2,}/g, ' ');
                 
                 if (cleanPart) {
                     bestParts.push(cleanPart);
@@ -630,14 +658,15 @@ function extractPlate(text) {
         for (let w of words) {
             // Останавливаемся, если слово - это предлог или глагол 
             if (/^(не|да|и|с|в|на|тут|там|к|по|за|от|до|для|сломался|приехал)$/i.test(w) || 
-                (/^[а-яіїєґ]{4,}$/i.test(w) && w.toUpperCase() !== w)) {
+                (/^[а-яіїєґ]{4,}$/i.test(w) && w.toUpperCase() !== w) || w.length === 1) {
                 break;
             }
             plateWords.push(w);
         }
         let candidate = plateWords.join(' ').replace(/[\-]+/g, ' ').toUpperCase();
         candidate = candidate.replace(/[^A-ZА-ЯІЇЄҐ0-9]+$/, '').trim();
-        if (candidate.replace(/\s+/g,'').length >= 4) return candidate;
+        // Убираем кандидата, который состоит только из цифр и имеет длину похожую на телефон
+        if (candidate.replace(/\s+/g,'').length >= 4 && !/^\d{9,}$/.test(candidate.replace(/\s+/g,''))) return candidate;
     }
 
     // 2. Поиск стандартных шаблонов (без маркеров)
@@ -648,27 +677,24 @@ function extractPlate(text) {
     const patterns = [
         // Немецкий / сложный EU (B AB 1234, M UX 4321)
         // 1-3 буквы, потом 1-2 буквы, потом 3-4 цифры
-        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{1,3}[\\s\\-]+[A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{1,2}[\\s\\-]+\\d{3,4})" + patSuffix, "i"),
+        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐ]{1,3}[\\s\\-]+[A-ZА-ЯІЇЄҐ]{1,2}[\\s\\-]+\\d{3,4})" + patSuffix, "i"),
 
         // UA/BG (AA 1234 BB, C 1234 XC, X 8888 BB) 
-        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{1,3}[\\s\\-]*\\d{4}[\\s\\-]*[A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{1,2})" + patSuffix, "i"),
+        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐ]{1,3}[\\s\\-]*\\d{4}[\\s\\-]*[A-ZА-ЯІЇЄҐ]{1,2})" + patSuffix, "i"),
 
         // Транзитные / Дипломатические (11 AA 1234, T1 12345)
-        new RegExp(patPrefix + "(\\d{1,3}[\\s\\-]*[A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{1,3}[\\s\\-]*\\d{3,4})" + patSuffix, "i"),
-        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]\\d{1,2}[\\s\\-]*[A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{1,3}[\\s\\-]*\\d{3,4})" + patSuffix, "i"),
+        new RegExp(patPrefix + "(\\d{1,3}[\\s\\-]*[A-ZА-ЯІЇЄҐ]{1,3}[\\s\\-]*\\d{3,4})" + patSuffix, "i"),
+        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐ]\\d{1,2}[\\s\\-]*[A-ZА-ЯІЇЄҐ]{1,3}[\\s\\-]*\\d{3,4})" + patSuffix, "i"),
 
         // Польские / Чешские / Литовские (WX 12345, CZ 12345, ABC 123, GD 123AW)
-        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{2,3}[\\s\\-]*\\d{3,5}[\\s\\-]*[A-ZА-ЯІЇЄҐA-Za-zа-яіїєґ]{0,2})" + patSuffix, "i")
+        new RegExp(patPrefix + "([A-ZА-ЯІЇЄҐ]{2,3}[\\s\\-]*\\d{3,5}[\\s\\-]*[A-ZА-ЯІЇЄҐ]{0,2})" + patSuffix, "i")
     ];
 
     for (const pat of patterns) {
         let match = text.match(pat);
         if (match) {
-            let candidate = match[1].replace(/[\\-]+/g, ' ').replace(/\\s{2,}/g, ' ').trim().toUpperCase();
+            let candidate = match[1].replace(/[\\-]+/g, ' ').replace(/\s{2,}/g, ' ').trim().toUpperCase();
             
-            // Защита от предлогов и союзов на конце (В, НА, С, НЕ и т.д.)
-            candidate = candidate.replace(/\s+(НЕ|ДА|И|С|В|НА|ТУТ|ТАМ|К|ПО|ЗА|ОТ|ДО|ДЛЯ)$/i, '').trim();
-
             // Фильтр от брендов ("BMW 330")
             const firstWord = candidate.split(' ')[0].toLowerCase();
             const isBrand = CAR_BRANDS.some(b => b.names.some(n => n === firstWord));
