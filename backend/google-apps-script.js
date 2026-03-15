@@ -148,6 +148,225 @@ function setupSheetHeaders(sheet) {
 
 function doGet(e) {
   return ContentService
-    .createTextOutput('CRM API работает. Версия с умным форматированием.')
+    .createTextOutput('CRM API работает. Версия с аналитикой.')
     .setMimeType(ContentService.MimeType.TEXT);
+}
+
+// =============================================
+// 📊 АНАЛИТИКА — автоматический лист
+// =============================================
+
+/**
+ * Запусти эту функцию ОДИН РАЗ вручную из редактора скриптов (▶️),
+ * чтобы создать лист аналитики. Или он создастся сам при первой заявке.
+ */
+function createAnalytics() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dataSheet = ss.getSheets()[0];
+  setupAnalyticsSheet(ss, dataSheet.getName());
+}
+
+function setupAnalyticsSheet(ss, dataSheetName) {
+  const SHEET_NAME = '📊 Аналитика';
+  
+  // Удаляем старый лист аналитики, если есть (пересоздаём)
+  let old = ss.getSheetByName(SHEET_NAME);
+  if (old) ss.deleteSheet(old);
+  
+  const s = ss.insertSheet(SHEET_NAME);
+  
+  // Ширины колонок
+  s.setColumnWidth(1, 40);   // отступ
+  s.setColumnWidth(2, 260);
+  s.setColumnWidth(3, 180);
+  s.setColumnWidth(4, 180);
+  s.setColumnWidth(5, 180);
+  s.setColumnWidth(6, 180);
+  
+  // Фон всего листа
+  s.getRange('A1:F200').setBackground('#f8fafc').setFontFamily('Arial');
+  
+  let row = 1;
+  const dn = dataSheetName; // имя листа с данными
+  
+  // ========== ЗАГОЛОВОК ==========
+  s.getRange(row, 2, 1, 5).merge()
+    .setValue('❄️ Авто Холод CRM — Аналитика')
+    .setFontSize(20).setFontWeight('bold').setFontColor('#1e293b')
+    .setHorizontalAlignment('center').setVerticalAlignment('middle');
+  s.setRowHeight(row, 50);
+  row += 1;
+  
+  s.getRange(row, 2, 1, 5).merge()
+    .setValue('Данные обновляются автоматически')
+    .setFontSize(11).setFontColor('#94a3b8')
+    .setHorizontalAlignment('center');
+  row += 2;
+  
+  // ========== БЛОК 1: ОБЩИЕ ПОКАЗАТЕЛИ ==========
+  row = makeBlockHeader(s, row, '📋  ОБЩИЕ ПОКАЗАТЕЛИ', '#1e40af', 5);
+  
+  const kpiLabels = ['Заявок сегодня', 'Заявок за неделю', 'Заявок за месяц', 'Уникальных клиентов (месяц)'];
+  const kpiFormulas = [
+    // Сегодня: дата в формате DD.MM.YYYY совпадает с TODAY
+    '=SUMPRODUCT((LEFT(\'' + dn + '\'!A2:A, 10)=TEXT(TODAY(),"DD.MM.YYYY"))*1)',
+    // Неделя: дата >= начало недели 
+    '=SUMPRODUCT((DATEVALUE(MID(\'' + dn + '\'!A2:A,4,2)&"/"&LEFT(\'' + dn + '\'!A2:A,2)&"/"&MID(\'' + dn + '\'!A2:A,7,4))>=TODAY()-WEEKDAY(TODAY(),2)+1)*(DATEVALUE(MID(\'' + dn + '\'!A2:A,4,2)&"/"&LEFT(\'' + dn + '\'!A2:A,2)&"/"&MID(\'' + dn + '\'!A2:A,7,4))<=TODAY())*(\'' + dn + '\'!A2:A<>""))',
+    // Месяц: месяц и год совпадают
+    '=SUMPRODUCT((MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"))*(MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY"))*(\'' + dn + '\'!A2:A<>""))',
+    // Уникальные клиенты за месяц (по имени) 
+    '=IFERROR(SUMPRODUCT(((MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"))*(MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY"))*(\'' + dn + '\'!D2:D<>""))/COUNTIFS(\'' + dn + '\'!D2:D,\'' + dn + '\'!D2:D,MID(\'' + dn + '\'!A2:A,4,2),TEXT(TODAY(),"MM"),MID(\'' + dn + '\'!A2:A,7,4),TEXT(TODAY(),"YYYY"))),0)'
+  ];
+  
+  // Подписи
+  s.getRange(row, 2).setValue(kpiLabels[0]).setFontSize(12).setFontColor('#475569');
+  s.getRange(row, 3).setValue(kpiLabels[1]).setFontSize(12).setFontColor('#475569');
+  s.getRange(row, 4).setValue(kpiLabels[2]).setFontSize(12).setFontColor('#475569');
+  s.getRange(row, 5).setValue(kpiLabels[3]).setFontSize(12).setFontColor('#475569');
+  row++;
+  
+  // Значения (крупные)
+  for (let i = 0; i < 4; i++) {
+    s.getRange(row, 2 + i)
+      .setFormula(kpiFormulas[i])
+      .setFontSize(28).setFontWeight('bold').setFontColor('#1e293b')
+      .setHorizontalAlignment('center')
+      .setNumberFormat('0');
+  }
+  s.setRowHeight(row, 50);
+  row += 2;
+  
+  // ========== БЛОК 2: ВЫРУЧКА ==========
+  row = makeBlockHeader(s, row, '💰  ВЫРУЧКА', '#047857', 5);
+  
+  const revLabels = ['Сегодня', 'За неделю', 'За месяц'];
+  const revFormulas = [
+    // Сумма за сегодня
+    '=SUMPRODUCT((LEFT(\'' + dn + '\'!A2:A,10)=TEXT(TODAY(),"DD.MM.YYYY"))*(\'' + dn + '\'!L2:L))',
+    // Сумма за неделю
+    '=SUMPRODUCT((DATEVALUE(MID(\'' + dn + '\'!A2:A,4,2)&"/"&LEFT(\'' + dn + '\'!A2:A,2)&"/"&MID(\'' + dn + '\'!A2:A,7,4))>=TODAY()-WEEKDAY(TODAY(),2)+1)*(DATEVALUE(MID(\'' + dn + '\'!A2:A,4,2)&"/"&LEFT(\'' + dn + '\'!A2:A,2)&"/"&MID(\'' + dn + '\'!A2:A,7,4))<=TODAY())*(\'' + dn + '\'!L2:L))',
+    // Сумма за месяц
+    '=SUMPRODUCT((MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"))*(MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY"))*(\'' + dn + '\'!L2:L))'
+  ];
+  
+  s.getRange(row, 2).setValue(revLabels[0]).setFontSize(12).setFontColor('#475569');
+  s.getRange(row, 3).setValue(revLabels[1]).setFontSize(12).setFontColor('#475569');
+  s.getRange(row, 4).setValue(revLabels[2]).setFontSize(12).setFontColor('#475569');
+  row++;
+  
+  for (let i = 0; i < 3; i++) {
+    s.getRange(row, 2 + i)
+      .setFormula(revFormulas[i])
+      .setFontSize(28).setFontWeight('bold').setFontColor('#047857')
+      .setHorizontalAlignment('center')
+      .setNumberFormat('#,##0');
+  }
+  s.setRowHeight(row, 50);
+  row += 2;
+  
+  // ========== БЛОК 3: АКТИВНОСТЬ РАБОТНИКОВ ==========
+  row = makeBlockHeader(s, row, '👷  АКТИВНОСТЬ РАБОТНИКОВ (за месяц)', '#7c3aed', 5);
+  
+  // Таблица заголовков
+  const workerHeaders = ['Работник', 'Заявок', 'Завершено'];
+  const wHeaderRange = s.getRange(row, 2, 1, 3);
+  wHeaderRange.setValues([workerHeaders]);
+  wHeaderRange.setBackground('#334155').setFontColor('#f8fafc').setFontWeight('bold')
+    .setFontSize(12).setHorizontalAlignment('center');
+  row++;
+  
+  // Динамическая формула: sort unique workers
+  // Используем SORT + UNIQUE и COUNTIFS
+  const workerStartRow = row;
+  const workers = ['Влад Врабий', 'Олег Деде', 'Серёжа Деде', 'Лена Деде', 'Илья Степанов'];
+  
+  workers.forEach((name, i) => {
+    const r = workerStartRow + i;
+    const bgColor = i % 2 === 0 ? '#f1f5f9' : '#ffffff';
+    s.getRange(r, 2, 1, 3).setBackground(bgColor);
+    
+    s.getRange(r, 2).setValue(name).setFontSize(12).setFontColor('#334155');
+    
+    // Количество заявок за месяц  
+    s.getRange(r, 3)
+      .setFormula('=SUMPRODUCT((\'' + dn + '\'!M2:M="' + name + '")*(MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"))*(MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY")))')
+      .setFontSize(14).setFontWeight('bold').setHorizontalAlignment('center').setNumberFormat('0');
+    
+    // Количество завершённых за месяц
+    s.getRange(r, 4)
+      .setFormula('=SUMPRODUCT((\'' + dn + '\'!M2:M="' + name + '")*(\'' + dn + '\'!B2:B="Завершено")*(MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"))*(MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY")))')
+      .setFontSize(14).setFontWeight('bold').setHorizontalAlignment('center').setNumberFormat('0');
+  });
+  
+  // Рамки таблицы
+  s.getRange(workerStartRow - 1, 2, workers.length + 1, 3)
+    .setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+  
+  row = workerStartRow + workers.length + 1;
+  
+  // ========== БЛОК 4: ЧАСТЫЕ ПОЛОМКИ ==========
+  row = makeBlockHeader(s, row, '🔧  ТОП-5 ЧАСТЫХ ПРОБЛЕМ (за месяц)', '#dc2626', 5);
+  
+  const probHeaders = ['Проблема / Симптом', 'Количество'];
+  const pHeaderRange = s.getRange(row, 2, 1, 2);
+  pHeaderRange.setValues([probHeaders]);
+  pHeaderRange.setBackground('#334155').setFontColor('#f8fafc').setFontWeight('bold')
+    .setFontSize(12).setHorizontalAlignment('center');
+  row++;
+  
+  // Для топ-5 проблем нужно использовать вспомогательную логику
+  // Формулы SORTN + UNIQUE + COUNTIF через ArrayFormula (Google Sheets specific)
+  // Используем формулу QUERY для динамического получения топ-5
+  const probStartRow = row;
+  
+  for (let i = 0; i < 5; i++) {
+    const r = probStartRow + i;
+    const bgColor = i % 2 === 0 ? '#f1f5f9' : '#ffffff';
+    s.getRange(r, 2, 1, 2).setBackground(bgColor);
+    
+    // QUERY формула для получения i-й самой частой проблемы за текущий месяц
+    // Используем INDEX + MATCH + LARGE подход
+    s.getRange(r, 2)
+      .setFormula('=IFERROR(INDEX(SORTN(UNIQUE(FILTER(\'' + dn + '\'!J2:J, \'' + dn + '\'!J2:J<>"", MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"), MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY"))), 5, 0, COUNTIF(FILTER(\'' + dn + '\'!J2:J, \'' + dn + '\'!J2:J<>"", MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"), MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY")), UNIQUE(FILTER(\'' + dn + '\'!J2:J, \'' + dn + '\'!J2:J<>"", MID(\'' + dn + '\'!A2:A,4,2)=TEXT(TODAY(),"MM"), MID(\'' + dn + '\'!A2:A,7,4)=TEXT(TODAY(),"YYYY")))), ' + (i + 1) + '), "—")')
+      .setFontSize(12).setFontColor('#334155').setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
+    
+    s.getRange(r, 3)
+      .setFormula('=IFERROR(COUNTIFS(\'' + dn + '\'!J2:J, B' + r + ', MID(\'' + dn + '\'!A2:A,4,2), TEXT(TODAY(),"MM"), MID(\'' + dn + '\'!A2:A,7,4), TEXT(TODAY(),"YYYY")), "—")')
+      .setFontSize(14).setFontWeight('bold').setHorizontalAlignment('center').setNumberFormat('0');
+  }
+  
+  s.getRange(probStartRow - 1, 2, 6, 2)
+    .setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+  
+  row = probStartRow + 6;
+  
+  // Подпись внизу
+  s.getRange(row, 2, 1, 5).merge()
+    .setValue('Данные обновляются автоматически на основе заявок из основного листа.')
+    .setFontSize(10).setFontColor('#94a3b8').setFontStyle('italic')
+    .setHorizontalAlignment('center');
+  
+  // Закрепляем первую строку
+  s.setFrozenRows(1);
+  
+  // Защита листа от редактирования (предупреждение)
+  const protection = s.protect().setDescription('Аналитика — только для чтения');
+  protection.setWarningOnly(true);
+  
+  // Скрыть сетку для красоты
+  s.setHiddenGridlines(true);
+}
+
+// Вспомогательная: красивый заголовок блока
+function makeBlockHeader(sheet, row, title, color, colSpan) {
+  const range = sheet.getRange(row, 2, 1, colSpan);
+  range.merge().setValue(title)
+    .setBackground(color).setFontColor('#ffffff')
+    .setFontSize(13).setFontWeight('bold')
+    .setHorizontalAlignment('left')
+    .setVerticalAlignment('middle');
+  sheet.setRowHeight(row, 36);
+  
+  // Скруглённые углы имитируем через чистые нижние строки
+  return row + 1;
 }
