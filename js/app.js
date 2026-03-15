@@ -516,9 +516,11 @@ function hideStatus() {
 
 const photoCameraInput = document.getElementById('photoCameraInput');
 const photoGalleryInput = document.getElementById('photoGalleryInput');
-const photoPreviewWrap = document.getElementById('photoPreviewWrap');
-const photoPreviewImg = document.getElementById('photoPreviewImg');
-const photoRemoveBtn = document.getElementById('photoRemoveBtn');
+const photoAddMoreInput = document.getElementById('photoAddMoreInput');
+const photoPreviewsContainer = document.getElementById('photoPreviewsContainer');
+const photoPreviewsGrid = document.getElementById('photoPreviewsGrid');
+const photoClearAllBtn = document.getElementById('photoClearAllBtn');
+const photoAnalyzeBtn = document.getElementById('photoAnalyzeBtn');
 const photoUploadArea = document.getElementById('photoUploadArea');
 const photoAnalyzing = document.getElementById('photoAnalyzing');
 const photoResult = document.getElementById('photoResult');
@@ -533,69 +535,107 @@ const photoResultDate = document.getElementById('photoResultDate');
 
 const addBtnPhoto = document.getElementById('addBtnPhoto');
 
-let currentPhotoBase64 = null;
-let currentPhotoFile = null;
+// Массив загруженных фото (base64)
+let photoList = [];
 
-// Handle both camera and gallery inputs
-photoCameraInput.addEventListener('change', handlePhotoSelect);
-photoGalleryInput.addEventListener('change', handlePhotoSelect);
+// Handle all inputs
+photoCameraInput.addEventListener('change', (e) => addPhotos(e.target.files));
+photoGalleryInput.addEventListener('change', (e) => addPhotos(e.target.files));
+photoAddMoreInput.addEventListener('change', (e) => addPhotos(e.target.files));
 
-async function handlePhotoSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+function addPhotos(files) {
+    if (!files || files.length === 0) return;
 
-    currentPhotoFile = file;
+    for (const file of files) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const dataUrl = ev.target.result;
+            const base64 = dataUrl.split(',')[1];
+            photoList.push({ dataUrl, base64 });
+            renderPhotoGrid();
+        };
+        reader.readAsDataURL(file);
+    }
 
-    // Read and show preview
-    const reader = new FileReader();
-    reader.onload = async function(ev) {
-        const dataUrl = ev.target.result;
-        currentPhotoBase64 = dataUrl.split(',')[1];
-
-        // Show preview, hide upload area
-        photoPreviewImg.src = dataUrl;
-        photoPreviewWrap.classList.remove('hidden');
-        photoUploadArea.classList.add('hidden');
-
-        // Hide previous result
-        photoResult.classList.add('hidden');
-        photoResultCar.value = '';
-        photoResultPlate.value = '';
-        
-        // Prepare optional elements
-        if(photoResultVin) photoResultVin.value = '';
-        if(photoResultMileage) photoResultMileage.value = '';
-        if(photoResultWorks) photoResultWorks.value = '';
-        if(photoResultPrice) photoResultPrice.value = '';
-        if(photoResultDate) {
-            const now = new Date();
-            // Format: DD.MM.YYYY HH:mm
-            const pDate = String(now.getDate()).padStart(2, '0') + '.' + 
-                          String(now.getMonth() + 1).padStart(2, '0') + '.' + 
-                          now.getFullYear() + ' ' + 
-                          String(now.getHours()).padStart(2, '0') + ':' + 
-                          String(now.getMinutes()).padStart(2, '0');
-            photoResultDate.value = pDate;
-        }
-
-        // Analyze
-        await analyzePhoto(currentPhotoBase64);
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input so re-selecting same file works
-    e.target.value = '';
+    // Reset inputs (allow re-selecting same files)
+    photoCameraInput.value = '';
+    photoGalleryInput.value = '';
+    photoAddMoreInput.value = '';
 }
 
-// Remove photo
-photoRemoveBtn.addEventListener('click', () => {
+function renderPhotoGrid() {
+    photoPreviewsGrid.innerHTML = '';
+
+    photoList.forEach((photo, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = 'photo-thumb';
+
+        const img = document.createElement('img');
+        img.src = photo.dataUrl;
+        img.alt = 'Фото ' + (idx + 1);
+        thumb.appendChild(img);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'photo-thumb-remove';
+        removeBtn.title = 'Удалить';
+        removeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        removeBtn.addEventListener('click', () => {
+            photoList.splice(idx, 1);
+            renderPhotoGrid();
+        });
+        thumb.appendChild(removeBtn);
+
+        photoPreviewsGrid.appendChild(thumb);
+    });
+
+    // Show/hide containers
+    if (photoList.length > 0) {
+        photoPreviewsContainer.classList.remove('hidden');
+        photoUploadArea.classList.add('hidden');
+    } else {
+        photoPreviewsContainer.classList.add('hidden');
+        photoUploadArea.classList.remove('hidden');
+    }
+}
+
+// Clear all photos
+photoClearAllBtn.addEventListener('click', () => {
     resetPhotoSection();
 });
 
+// Analyze button
+photoAnalyzeBtn.addEventListener('click', async () => {
+    if (photoList.length === 0) {
+        showStatus('error', 'Загрузите хотя бы одно фото.');
+        return;
+    }
+
+    // Clear previous result
+    photoResult.classList.add('hidden');
+    photoResultCar.value = '';
+    photoResultPlate.value = '';
+    if(photoResultVin) photoResultVin.value = '';
+    if(photoResultMileage) photoResultMileage.value = '';
+    if(photoResultWorks) photoResultWorks.value = '';
+    if(photoResultPrice) photoResultPrice.value = '';
+    if(photoResultDate) {
+        const now = new Date();
+        const pDate = String(now.getDate()).padStart(2, '0') + '.' + 
+                      String(now.getMonth() + 1).padStart(2, '0') + '.' + 
+                      now.getFullYear() + ' ' + 
+                      String(now.getHours()).padStart(2, '0') + ':' + 
+                      String(now.getMinutes()).padStart(2, '0');
+        photoResultDate.value = pDate;
+    }
+
+    await analyzePhotos(photoList.map(p => p.base64));
+});
+
 function resetPhotoSection() {
-    currentPhotoBase64 = null;
-    currentPhotoFile = null;
-    photoPreviewWrap.classList.add('hidden');
+    photoList = [];
+    photoPreviewsGrid.innerHTML = '';
+    photoPreviewsContainer.classList.add('hidden');
     photoResult.classList.add('hidden');
     photoAnalyzing.classList.add('hidden');
     photoUploadArea.classList.remove('hidden');
@@ -607,11 +647,13 @@ function resetPhotoSection() {
     if(photoResultPrice) photoResultPrice.value = '';
     if(photoResultDate) photoResultDate.value = '';
     // Remove highlighting
-    document.getElementById('photoFieldCar').classList.remove('preview-field--empty');
-    document.getElementById('photoFieldPlate').classList.remove('preview-field--empty');
+    const carField = document.getElementById('photoFieldCar');
+    const plateField = document.getElementById('photoFieldPlate');
+    if(carField) carField.classList.remove('preview-field--empty');
+    if(plateField) plateField.classList.remove('preview-field--empty');
 }
 
-async function analyzePhoto(base64) {
+async function analyzePhotos(base64List) {
     if (!GROQ_API_KEY || GROQ_API_KEY === 'gsk_PASTE_YOUR_API_KEY_HERE') {
         showStatus('error', 'Groq API Key отсутствует в коде.');
         return;
@@ -621,6 +663,20 @@ async function analyzePhoto(base64) {
     photoAnalyzing.classList.remove('hidden');
 
     try {
+        // Build content array with all images
+        const contentItems = [];
+        base64List.forEach((b64, i) => {
+            contentItems.push({
+                type: 'image_url',
+                image_url: { url: 'data:image/jpeg;base64,' + b64 }
+            });
+        });
+        contentItems.push({
+            type: 'text',
+            text: 'Определи марку, модель, госномер и VIN автомобиля на фото.' + 
+                  (base64List.length > 1 ? ' На фото несколько ракурсов одной и той же машины. Объедини информацию со всех фото в один ответ.' : '')
+        });
+
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -632,22 +688,11 @@ async function analyzePhoto(base64) {
                 messages: [
                     {
                         role: 'system',
-                        content: 'Ты помощник для автосервиса. Посмотри на фото автомобиля и верни ТОЛЬКО JSON без пояснений:\n{\n  "car": "марка и модель авто или null",\n  "plate": "госномер в формате AA 1234 BB или null",\n  "vin": "VIN номер если виден на фото или null"\n}\nЕсли что-то не видно на фото — верни null для этого поля.'
+                        content: 'Ты помощник для автосервиса. Посмотри на фото автомобиля и верни ТОЛЬКО JSON без пояснений:\n{\n  "car": "марка и модель авто или null",\n  "plate": "госномер в формате AA 1234 BB или null",\n  "vin": "VIN номер если виден на фото или null"\n}\nЕсли что-то не видно на фото — верни null для этого поля. Если несколько фото — объедини информацию со всех.'
                     },
                     {
                         role: 'user',
-                        content: [
-                            {
-                                type: 'image_url',
-                                image_url: {
-                                    url: 'data:image/jpeg;base64,' + base64
-                                }
-                            },
-                            {
-                                type: 'text',
-                                text: 'Определи марку, модель и госномер автомобиля на фото.'
-                            }
-                        ]
+                        content: contentItems
                     }
                 ],
                 max_tokens: 200,
@@ -666,7 +711,6 @@ async function analyzePhoto(base64) {
         // Parse JSON from response
         let parsed;
         try {
-            // Try extracting JSON from possible markdown wrapper
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
         } catch {

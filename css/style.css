@@ -539,6 +539,133 @@ h1 {
     transform: scale(1.1);
 }
 
+/* ---- Multi-photo grid ---- */
+.photo-previews {
+    margin-bottom: 16px;
+    animation: fadeSlideIn 0.35s ease;
+}
+
+.photo-previews.hidden {
+    display: none;
+}
+
+.photo-previews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.photo-thumb {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    animation: fadeSlideIn 0.3s ease;
+}
+
+.photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.photo-thumb-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s, transform 0.15s;
+    padding: 0;
+}
+
+.photo-thumb-remove:hover {
+    background: rgba(220,38,38,0.85);
+    transform: scale(1.15);
+}
+
+.photo-thumb-remove svg {
+    width: 12px;
+    height: 12px;
+}
+
+.photo-previews-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.photo-add-more-btn,
+.photo-clear-all-btn,
+.photo-analyze-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.photo-add-more-btn {
+    background: var(--bg-field);
+    color: var(--text-secondary);
+    border: 1.5px dashed var(--border-color);
+}
+.photo-add-more-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.photo-add-more-btn input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.photo-clear-all-btn {
+    background: var(--bg-field);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+.photo-clear-all-btn:hover {
+    color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+.photo-analyze-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    margin-left: auto;
+}
+.photo-analyze-btn:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 12px var(--accent-shadow);
+}
+.photo-analyze-btn:active {
+    transform: scale(0.97);
+}
+
 /* Analyzing spinner */
 .photo-analyzing {
     display: flex;

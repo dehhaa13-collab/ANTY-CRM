@@ -173,18 +173,30 @@
                     <label class="photo-btn photo-btn--gallery">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         <span>Загрузить фото</span>
-                        <input type="file" accept="image/*" id="photoGalleryInput" hidden>
+                        <input type="file" accept="image/*" multiple id="photoGalleryInput" hidden>
                     </label>
                 </div>
-                <p class="photo-hint">Сфотографируйте автомобиль спереди — чтобы был виден номер и марка</p>
+                <p class="photo-hint">Сфотографируйте автомобиль спереди — чтобы был виден номер и марка. Можно загрузить несколько фото.</p>
             </div>
 
-            <!-- Превью загруженного фото -->
-            <div class="photo-preview-wrap hidden" id="photoPreviewWrap">
-                <img id="photoPreviewImg" class="photo-preview-img" alt="Фото авто">
-                <button type="button" class="photo-remove-btn" id="photoRemoveBtn" title="Удалить фото">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+            <!-- Превью загруженных фото (сетка) -->
+            <div class="photo-previews hidden" id="photoPreviewsContainer">
+                <div class="photo-previews-grid" id="photoPreviewsGrid"></div>
+                <div class="photo-previews-actions">
+                    <button type="button" class="photo-add-more-btn" id="photoAddMoreBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Ещё фото
+                        <input type="file" accept="image/*" multiple id="photoAddMoreInput" hidden>
+                    </button>
+                    <button type="button" class="photo-clear-all-btn" id="photoClearAllBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Убрать все
+                    </button>
+                    <button type="button" class="photo-analyze-btn" id="photoAnalyzeBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Распознать
+                    </button>
+                </div>
             </div>
 
             <!-- Спиннер анализа -->
