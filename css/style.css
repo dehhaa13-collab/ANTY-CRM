@@ -899,9 +899,21 @@ body.dark .preview-status.status-done { background: rgba(16, 185, 129, 0.15); co
     text-transform: uppercase;
     letter-spacing: 0.04em;
     transition: color 0.35s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.preview-field input {
+.preview-field label span {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.preview-field input,
+.preview-field textarea {
     width: 100%;
     padding: 10px 14px;
     font-family: inherit;
@@ -915,24 +927,28 @@ body.dark .preview-status.status-done { background: rgba(16, 185, 129, 0.15); co
     background: var(--bg-field);
 }
 
-.preview-field input:focus {
+.preview-field input:focus,
+.preview-field textarea:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-glow);
     background: var(--bg-field-focus);
 }
 
-.preview-field input::placeholder {
+.preview-field input::placeholder,
+.preview-field textarea::placeholder {
     color: var(--text-muted);
     font-style: italic;
 }
 
 /* Empty field highlight */
-.preview-field--empty input {
+.preview-field--empty input,
+.preview-field--empty textarea {
     border-color: var(--warning-border);
     background: var(--warning-bg);
 }
 
-.preview-field--empty input:focus {
+.preview-field--empty input:focus,
+.preview-field--empty textarea:focus {
     border-color: var(--error-color);
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
 }
@@ -1429,7 +1445,8 @@ html, body {
         font-size: 11px;
     }
 
-    .preview-field input {
+    .preview-field input,
+    .preview-field textarea {
         font-size: 16px;
         padding: 10px 12px;
         border-radius: 8px;
