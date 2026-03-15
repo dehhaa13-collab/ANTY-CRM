@@ -23,31 +23,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- Toggle ---
+// ====== GROQ API KEY ======
+const GROQ_API_KEY = 'gsk_PASTE_YOUR_API_KEY_HERE'; // <-- Вставь свой Groq API Key
+// ==========================
+
+// --- Toggle (3 режима) ---
 const toggleFree = document.getElementById('toggleFree');
+const togglePhoto = document.getElementById('togglePhoto');
 const toggleManual = document.getElementById('toggleManual');
 const toggleSlider = document.getElementById('toggleSlider');
 const freeFormSection = document.getElementById('freeFormSection');
+const photoFormSection = document.getElementById('photoFormSection');
 const manualFormSection = document.getElementById('manualFormSection');
 
+const toggleBtns = [toggleFree, togglePhoto, toggleManual];
+const sections = [freeFormSection, photoFormSection, manualFormSection];
+
 toggleFree.addEventListener('click', () => switchMode('free'));
+togglePhoto.addEventListener('click', () => switchMode('photo'));
 toggleManual.addEventListener('click', () => switchMode('manual'));
 
 function switchMode(mode) {
     hideStatus();
-    if (mode === 'free') {
-        toggleFree.classList.add('active');
-        toggleManual.classList.remove('active');
-        toggleSlider.classList.remove('right');
-        freeFormSection.classList.remove('hidden');
-        manualFormSection.classList.add('hidden');
-    } else {
-        toggleFree.classList.remove('active');
-        toggleManual.classList.add('active');
-        toggleSlider.classList.add('right');
-        freeFormSection.classList.add('hidden');
-        manualFormSection.classList.remove('hidden');
-    }
+    const modeMap = { free: 0, photo: 1, manual: 2 };
+    const idx = modeMap[mode] ?? 0;
+
+    // Slider position
+    toggleSlider.className = 'toggle-slider pos-' + idx;
+
+    // Active button
+    toggleBtns.forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+    });
+
+    // Sections
+    sections.forEach((sec, i) => {
+        sec.classList.toggle('hidden', i !== idx);
+    });
 }
 
 // =============================================
@@ -377,3 +389,201 @@ function showStatus(type, message) {
 function hideStatus() {
     statusEl.classList.add('hidden');
 }
+
+// =============================================
+// ИИ ПО ФОТО
+// =============================================
+
+const photoCameraInput = document.getElementById('photoCameraInput');
+const photoGalleryInput = document.getElementById('photoGalleryInput');
+const photoPreviewWrap = document.getElementById('photoPreviewWrap');
+const photoPreviewImg = document.getElementById('photoPreviewImg');
+const photoRemoveBtn = document.getElementById('photoRemoveBtn');
+const photoUploadArea = document.getElementById('photoUploadArea');
+const photoAnalyzing = document.getElementById('photoAnalyzing');
+const photoResult = document.getElementById('photoResult');
+const photoResultCar = document.getElementById('photoResultCar');
+const photoResultPlate = document.getElementById('photoResultPlate');
+const addBtnPhoto = document.getElementById('addBtnPhoto');
+
+let currentPhotoBase64 = null;
+let currentPhotoFile = null;
+
+// Handle both camera and gallery inputs
+photoCameraInput.addEventListener('change', handlePhotoSelect);
+photoGalleryInput.addEventListener('change', handlePhotoSelect);
+
+async function handlePhotoSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    currentPhotoFile = file;
+
+    // Read and show preview
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+        const dataUrl = ev.target.result;
+        currentPhotoBase64 = dataUrl.split(',')[1];
+
+        // Show preview, hide upload area
+        photoPreviewImg.src = dataUrl;
+        photoPreviewWrap.classList.remove('hidden');
+        photoUploadArea.classList.add('hidden');
+
+        // Hide previous result
+        photoResult.classList.add('hidden');
+        photoResultCar.value = '';
+        photoResultPlate.value = '';
+
+        // Analyze
+        await analyzePhoto(currentPhotoBase64);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input so re-selecting same file works
+    e.target.value = '';
+}
+
+// Remove photo
+photoRemoveBtn.addEventListener('click', () => {
+    resetPhotoSection();
+});
+
+function resetPhotoSection() {
+    currentPhotoBase64 = null;
+    currentPhotoFile = null;
+    photoPreviewWrap.classList.add('hidden');
+    photoResult.classList.add('hidden');
+    photoAnalyzing.classList.add('hidden');
+    photoUploadArea.classList.remove('hidden');
+    photoResultCar.value = '';
+    photoResultPlate.value = '';
+    // Remove highlighting
+    document.getElementById('photoFieldCar').classList.remove('preview-field--empty');
+    document.getElementById('photoFieldPlate').classList.remove('preview-field--empty');
+}
+
+async function analyzePhoto(base64) {
+    if (!GROQ_API_KEY || GROQ_API_KEY === 'gsk_PASTE_YOUR_API_KEY_HERE') {
+        showStatus('error', 'Groq API Key не настроен. Откройте app.js и укажите GROQ_API_KEY.');
+        return;
+    }
+
+    // Show spinner
+    photoAnalyzing.classList.remove('hidden');
+
+    try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + GROQ_API_KEY
+            },
+            body: JSON.stringify({
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Ты помощник для автосервиса. Посмотри на фото автомобиля и верни ТОЛЬКО JSON без пояснений:\n{\n  "car": "марка и модель авто или null",\n  "plate": "госномер в формате AA 1234 BB или null"\n}\nЕсли что-то не видно на фото — верни null для этого поля.'
+                    },
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: 'data:image/jpeg;base64,' + base64
+                                }
+                            },
+                            {
+                                type: 'text',
+                                text: 'Определи марку, модель и госномер автомобиля на фото.'
+                            }
+                        ]
+                    }
+                ],
+                max_tokens: 200,
+                temperature: 0.1
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error?.message || `Groq API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || '';
+
+        // Parse JSON from response
+        let parsed;
+        try {
+            // Try extracting JSON from possible markdown wrapper
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
+        } catch {
+            showStatus('error', 'Не удалось распознать ответ ИИ. Заполните вручную.');
+            photoResult.classList.remove('hidden');
+            highlightPhotoFields();
+            return;
+        }
+
+        // Fill result fields
+        photoResultCar.value = (parsed.car && parsed.car !== 'null') ? parsed.car : '';
+        photoResultPlate.value = (parsed.plate && parsed.plate !== 'null') ? parsed.plate.toUpperCase() : '';
+
+        // Show result card
+        photoResult.classList.remove('hidden');
+        highlightPhotoFields();
+
+        if (!photoResultCar.value && !photoResultPlate.value) {
+            showStatus('error', 'Не удалось распознать, заполните вручную');
+        }
+
+    } catch (err) {
+        showStatus('error', 'Ошибка распознавания: ' + err.message);
+        photoResult.classList.remove('hidden');
+        highlightPhotoFields();
+    } finally {
+        photoAnalyzing.classList.add('hidden');
+    }
+}
+
+function highlightPhotoFields() {
+    const carField = document.getElementById('photoFieldCar');
+    const plateField = document.getElementById('photoFieldPlate');
+    carField.classList.toggle('preview-field--empty', !photoResultCar.value.trim());
+    plateField.classList.toggle('preview-field--empty', !photoResultPlate.value.trim());
+}
+
+// Remove highlighting on input
+photoResultCar.addEventListener('input', highlightPhotoFields);
+photoResultPlate.addEventListener('input', highlightPhotoFields);
+
+// Submit photo data
+addBtnPhoto.addEventListener('click', async () => {
+    const car = photoResultCar.value.trim();
+    const plate = photoResultPlate.value.trim().toUpperCase();
+
+    if (!car && !plate) {
+        showStatus('error', 'Заполните хотя бы одно поле');
+        return;
+    }
+
+    const payload = {
+        date: formatDate(new Date()),
+        name: '',
+        phone: '',
+        car: car,
+        plate: plate,
+        problem: '',
+        visitDate: '',
+        price: '',
+        status: 'Новая',
+    };
+
+    const success = await sendToSheet(payload, addBtnPhoto);
+    if (success) {
+        resetPhotoSection();
+    }
+});
