@@ -234,21 +234,28 @@ function normalizePhone(raw) {
         digits = digits.substring(1); // убираем 8, оставляем 0...
     }
 
-    // Украина: 0 -> +380
-    if (digits.startsWith('0') && digits.length === 10) {
-        const uaCode = digits.substring(1, 3);
-        // Расширенный список украинских кодов
-        const uaCodes = ['39', '50', '63', '66', '67', '68', '73', '91', '92', '93', '94', '95', '96', '97', '98', '99'];
-        if (uaCodes.includes(uaCode)) {
-            digits = '+380' + digits.substring(1);
-            return formatPhoneDisplay(digits);
+    const uaCodes = ['39', '50', '63', '66', '67', '68', '73', '91', '92', '93', '94', '95', '96', '97', '98', '99'];
+    const bgCodes = ['87', '88', '89', '98', '43', '44', '2'];
+
+    // Если начинается с 0 (Украина обычно 10 цифр с нулем, Болгария 9-10)
+    if (digits.startsWith('0') && digits.length >= 9 && digits.length <= 10) {
+        const code = digits.substring(1, 3);
+        if (uaCodes.includes(code)) {
+            return formatPhoneDisplay('+380' + digits.substring(1));
         }
-        
-        // Болгария: 0 -> +359
-        const bgCodes = ['87', '88', '89', '98', '43', '44', '2'];
-        if (bgCodes.includes(uaCode)) {
-            digits = '+359' + digits.substring(1);
-            return formatPhoneDisplay(digits);
+        if (bgCodes.includes(code)) {
+            return formatPhoneDisplay('+359' + digits.substring(1));
+        }
+    }
+
+    // Если введено без нуля (9 букв: 671234567 или 881234567)
+    if (!digits.startsWith('0') && digits.length === 9) {
+        const code = digits.substring(0, 2);
+        if (uaCodes.includes(code)) {
+            return formatPhoneDisplay('+380' + digits);
+        }
+        if (bgCodes.includes(code)) {
+            return formatPhoneDisplay('+359' + digits);
         }
     }
 
@@ -262,7 +269,12 @@ function normalizePhone(raw) {
         return formatPhoneDisplay('+' + digits);
     }
 
-    // Если не распознали страну, форматируем как есть
+    // Если не распознали страну, возвращаем просто отформатированную строку (или сырую, если совсем странно)
+    // Попытка красивого форматирования если не определено
+    if (digits.length === 10 && digits.startsWith('0')) {
+        return formatPhoneDisplay('+380' + digits.substring(1)); // fallback на UA
+    }
+    
     return raw.trim();
 }
 

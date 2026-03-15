@@ -62,6 +62,16 @@ if (manualPlateInput) {
     });
 }
 
+// AUTO-FORMAT для номера телефона (ручной ввод)
+const manualPhoneInput = document.getElementById('manualPhone');
+if (manualPhoneInput) {
+    manualPhoneInput.addEventListener('blur', function() {
+        if (this.value.trim()) {
+            this.value = normalizePhone(this.value.trim());
+        }
+    });
+}
+
 // =============================================
 // ВОЛЬНАЯ ФОРМА (ИИ парсинг)
 // =============================================
@@ -239,7 +249,8 @@ const addBtnManual = document.getElementById('addBtnManual');
 
 addBtnManual.addEventListener('click', async () => {
     const name = document.getElementById('manualName').value.trim();
-    const phone = document.getElementById('manualPhone').value.trim();
+    let phone = document.getElementById('manualPhone').value.trim();
+    if (phone) phone = normalizePhone(phone);
     const car = document.getElementById('manualCar').value.trim();
     const plate = document.getElementById('manualPlate').value.trim().toUpperCase();
     const problem = document.getElementById('manualProblem').value.trim();
