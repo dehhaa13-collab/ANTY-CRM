@@ -84,6 +84,15 @@ if (manualPlateInput) {
     });
 }
 
+const manualVinInput = document.getElementById('manualVin');
+if (manualVinInput) {
+    manualVinInput.addEventListener('input', function() {
+        const pos = this.selectionStart;
+        this.value = this.value.toUpperCase();
+        this.setSelectionRange(pos, pos);
+    });
+}
+
 // AUTO-FORMAT для номера телефона (ручной ввод)
 const manualPhoneInput = document.getElementById('manualPhone');
 if (manualPhoneInput) {
@@ -275,6 +284,8 @@ addBtnManual.addEventListener('click', async () => {
     if (phone) phone = normalizePhone(phone);
     const car = document.getElementById('manualCar').value.trim();
     const plate = document.getElementById('manualPlate').value.trim().toUpperCase();
+    const vin = document.getElementById('manualVin') ? document.getElementById('manualVin').value.trim().toUpperCase() : '';
+    const mileage = document.getElementById('manualMileage') ? document.getElementById('manualMileage').value.trim() : '';
     const problem = document.getElementById('manualProblem').value.trim();
     const visitDateRaw = document.getElementById('manualVisitDate').value;
     const price = document.getElementById('manualPrice').value.trim();
@@ -299,6 +310,10 @@ addBtnManual.addEventListener('click', async () => {
         visitDate: visitDate,
         price: price,
         status: statusVal,
+        
+        // Новые поля
+        vin: vin,
+        mileage: mileage
     };
 
     const success = await sendToSheet(payload, addBtnManual);
@@ -307,6 +322,8 @@ addBtnManual.addEventListener('click', async () => {
         document.getElementById('manualPhone').value = '';
         document.getElementById('manualCar').value = '';
         document.getElementById('manualPlate').value = '';
+        if(document.getElementById('manualVin')) document.getElementById('manualVin').value = '';
+        if(document.getElementById('manualMileage')) document.getElementById('manualMileage').value = '';
         document.getElementById('manualProblem').value = '';
         document.getElementById('manualVisitDate').value = '';
         document.getElementById('manualPrice').value = '';
