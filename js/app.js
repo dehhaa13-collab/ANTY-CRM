@@ -528,6 +528,7 @@ const photoResultPlate = document.getElementById('photoResultPlate');
 const photoResultVin = document.getElementById('photoResultVin');
 const photoResultMileage = document.getElementById('photoResultMileage');
 const photoResultWorks = document.getElementById('photoResultWorks');
+const photoResultPrice = document.getElementById('photoResultPrice');
 const photoResultDate = document.getElementById('photoResultDate');
 
 const addBtnPhoto = document.getElementById('addBtnPhoto');
@@ -565,6 +566,7 @@ async function handlePhotoSelect(e) {
         if(photoResultVin) photoResultVin.value = '';
         if(photoResultMileage) photoResultMileage.value = '';
         if(photoResultWorks) photoResultWorks.value = '';
+        if(photoResultPrice) photoResultPrice.value = '';
         if(photoResultDate) {
             const now = new Date();
             // Format: DD.MM.YYYY HH:mm
@@ -602,6 +604,7 @@ function resetPhotoSection() {
     if(photoResultVin) photoResultVin.value = '';
     if(photoResultMileage) photoResultMileage.value = '';
     if(photoResultWorks) photoResultWorks.value = '';
+    if(photoResultPrice) photoResultPrice.value = '';
     if(photoResultDate) photoResultDate.value = '';
     // Remove highlighting
     document.getElementById('photoFieldCar').classList.remove('preview-field--empty');
@@ -711,6 +714,7 @@ addBtnPhoto.addEventListener('click', async () => {
     const mileage = photoResultMileage ? photoResultMileage.value.trim() : '';
     const works = photoResultWorks ? photoResultWorks.value.trim() : '';
     const pDate = photoResultDate ? photoResultDate.value.trim() : '';
+    const price = photoResultPrice ? photoResultPrice.value.trim() : '';
 
     const payload = {
         date: formatDate(new Date()),
@@ -720,7 +724,7 @@ addBtnPhoto.addEventListener('click', async () => {
         plate: plate,
         problem: '',
         visitDate: '',
-        price: '',
+        price: price,
         status: 'Новая',
         
         // Новые колонки из фото-формы
