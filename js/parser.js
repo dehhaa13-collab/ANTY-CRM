@@ -487,15 +487,31 @@ function extractProblem(text, parsed) {
                 // Убираем марку и модель авто если попала в проблему
                 if (parsed.car) {
                     const carParts = parsed.car.split(/\s+/);
-                    for (const cp of carParts) {
-                         if (cp.length > 2) {
-                             cleanPart = cleanPart.replace(new RegExp('\\b' + escapeRegex(cp) + '\\b', 'gi'), '').trim();
-                         }
-                    }
+                    // Убираем марку и модель авто если попала в проблему
+                    // Убираем все переводы брендов если они есть
                     for (const brand of CAR_BRANDS) {
                         for (const name of brand.names) {
-                            cleanPart = cleanPart.replace(new RegExp('\\b' + escapeRegex(name) + '\\b', 'gi'), '').trim();
+                            if (cleanPart.toLowerCase().includes(name)) {
+                                cleanPart = cleanPart.replace(new RegExp(escapeRegex(name), 'gi'), '').trim();
+                            }
                         }
+                    }
+                    
+                    for (const cp of carParts) {
+                         if (cp.length > 1) {
+                             // Уберем и оригинал, и чтобы перехватить русскоязычный ввод
+                             cleanPart = cleanPart.replace(new RegExp('\\b' + escapeRegex(cp) + '\\b', 'gi'), '').trim();
+                             // Кириллические буквы похожие на английские: "Х", "А", "В", "Е", "К", "М", "Н", "О", "Р", "С", "Т", "У"
+                             const cyrillicCP = cp.toUpperCase()
+                                 .replace(/X/g,'Х').replace(/A/g,'А').replace(/B/g,'В')
+                                 .replace(/E/g,'Е').replace(/K/g,'К').replace(/M/g,'М')
+                                 .replace(/H/g,'Н').replace(/O/g,'О').replace(/P/g,'Р')
+                                 .replace(/C/g,'С').replace(/T/g,'Т').replace(/Y/g,'У');
+                             if (cp.toUpperCase() !== cyrillicCP) {
+                                  cleanPart = cleanPart.replace(new RegExp('\\b' + escapeRegex(cyrillicCP) + '\\b', 'gi'), '').trim();
+                                  cleanPart = cleanPart.replace(new RegExp(escapeRegex(cyrillicCP), 'gi'), '').trim();
+                             }
+                         }
                     }
                 }
 
