@@ -8,6 +8,97 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmo-DrXxAGzsXqNLS0ohEKY1M-PFo1zzfZlRB8dH2h0rMsJ-JNBNwhZD8l6060sE7Ylw/exec';
 // ==========================
 
+// =============================================
+// АВТОРИЗАЦИЯ
+// =============================================
+
+const USERS = [
+    // Разработчик
+    { login: 'vlad', password: '12345', name: 'Влад Врабий' },
+    // Основатели
+    { login: 'oleg', password: '12345', name: 'Олег Деде' },
+    { login: 'ser', password: '12345', name: 'Серёжа Деде' },
+    { login: 'lena', password: '12345', name: 'Лена Деде' },
+    // Работники
+    { login: 'ilya', password: '12345678', name: 'Илья Степанов' },
+    { login: 'worker2', password: '', name: 'Работник 2' },
+    { login: 'worker3', password: '', name: 'Работник 3' },
+    { login: 'worker4', password: '', name: 'Работник 4' },
+];
+
+let currentUserName = '';
+
+const loginOverlay = document.getElementById('loginOverlay');
+const mainContainer = document.getElementById('mainContainer');
+const loginBtn = document.getElementById('loginBtn');
+const loginInput = document.getElementById('loginInput');
+const passwordInput = document.getElementById('passwordInput');
+const loginError = document.getElementById('loginError');
+const userNameEl = document.getElementById('userName');
+const logoutBtn = document.getElementById('logoutBtn');
+
+// Проверяем сохранённую сессию
+(function checkSession() {
+    const saved = localStorage.getItem('crm_user');
+    if (saved) {
+        const user = USERS.find(u => u.login === saved);
+        if (user) {
+            doLogin(user);
+            return;
+        }
+    }
+    // Не авторизован — показываем логин
+    loginOverlay.classList.remove('hidden');
+    mainContainer.classList.add('hidden');
+})();
+
+function doLogin(user) {
+    currentUserName = user.name;
+    localStorage.setItem('crm_user', user.login);
+    
+    // UI
+    userNameEl.textContent = user.name;
+    loginOverlay.classList.add('hidden');
+    mainContainer.classList.remove('hidden');
+}
+
+// Кнопка "Войти"
+loginBtn.addEventListener('click', attemptLogin);
+
+// Enter в полях — тоже пытаемся войти
+loginInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); });
+passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); });
+
+function attemptLogin() {
+    const login = loginInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
+    loginError.classList.add('hidden');
+
+    const user = USERS.find(u => u.login === login && u.password === password && u.password !== '');
+    if (user) {
+        doLogin(user);
+        // Очищаем поля
+        loginInput.value = '';
+        passwordInput.value = '';
+    } else {
+        loginError.classList.remove('hidden');
+        // Перезапуск анимации shake
+        loginError.style.animation = 'none';
+        loginError.offsetHeight; // force reflow
+        loginError.style.animation = '';
+    }
+}
+
+// Кнопка "Выйти"
+logoutBtn.addEventListener('click', () => {
+    currentUserName = '';
+    localStorage.removeItem('crm_user');
+    mainContainer.classList.add('hidden');
+    loginOverlay.classList.remove('hidden');
+    loginInput.focus();
+});
+
 // --- Общие элементы ---
 const statusEl = document.getElementById('status');
 
@@ -240,6 +331,7 @@ addBtn.addEventListener('click', async () => {
         visitDate: previewDate.value.trim(),
         price: previewPrice.value.trim(),
         status: 'Новая',
+        author: currentUserName
     };
 
     const success = await sendToSheet(payload, addBtn);
@@ -313,7 +405,8 @@ addBtnManual.addEventListener('click', async () => {
         
         // Новые поля
         vin: vin,
-        mileage: mileage
+        mileage: mileage,
+        author: currentUserName
     };
 
     const success = await sendToSheet(payload, addBtnManual);
@@ -634,7 +727,8 @@ addBtnPhoto.addEventListener('click', async () => {
         works: works,
         vin: vin,
         mileage: mileage,
-        photoDate: pDate
+        photoDate: pDate,
+        author: currentUserName
     };
 
     const success = await sendToSheet(payload, addBtnPhoto);

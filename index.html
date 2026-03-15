@@ -26,12 +26,38 @@
         <span class="theme-icon" id="themeIcon">☀️</span>
     </button>
 
-    <div class="container">
+    <!-- ====== LOGIN SCREEN ====== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <div class="login-logo">❄️</div>
+            <h1 class="login-title">Авто Холод CRM</h1>
+            <p class="login-subtitle">Войдите для продолжения</p>
+            <div class="login-field">
+                <label for="loginInput">Логин</label>
+                <input type="text" id="loginInput" placeholder="Введите логин" autocomplete="username" autofocus>
+            </div>
+            <div class="login-field">
+                <label for="passwordInput">Пароль</label>
+                <input type="password" id="passwordInput" placeholder="Введите пароль" autocomplete="current-password">
+            </div>
+            <div class="login-error hidden" id="loginError">Неверный логин или пароль</div>
+            <button class="login-btn" id="loginBtn">Войти</button>
+        </div>
+    </div>
+    <!-- ====== /LOGIN SCREEN ====== -->
+
+    <div class="container hidden" id="mainContainer">
         <div class="header">
             <div class="header-icon">🙋‍♂️</div>
             <div>
                 <h1>Новая заявка</h1>
                 <p class="header-subtitle">CRM автосервиса кондиционеров</p>
+            </div>
+            <div class="user-info" id="userInfo">
+                <span class="user-name" id="userName"></span>
+                <button class="logout-btn" id="logoutBtn" title="Выйти">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </button>
             </div>
         </div>
 

@@ -23,7 +23,8 @@ const HEADERS = [
   "Пробег",             // I
   "Симптомы / Проблема",// J
   "Выполненные работы", // K
-  "Цена (Итог)"         // L
+  "Цена (Итог)",        // L
+  "Добавил"              // M
 ];
 
 function doPost(e) {
@@ -52,7 +53,8 @@ function doPost(e) {
       data.mileage   || '',   // I: Пробег
       data.problem   || '',   // J: Проблема
       data.works     || '',   // K: Выполненные работы
-      data.price     || ''    // L: Цена
+      data.price     || '',   // L: Цена
+      data.author    || ''    // M: Добавил
     ];
 
     // 4. Добавляем строку
@@ -75,6 +77,7 @@ function doPost(e) {
     sheet.getRange(lastRowIndex, 7).setHorizontalAlignment("center").setFontWeight("bold"); // Госномер
     sheet.getRange(lastRowIndex, 8).setHorizontalAlignment("center"); // VIN
     sheet.getRange(lastRowIndex, 12).setHorizontalAlignment("center").setFontWeight("bold"); // Цена
+    sheet.getRange(lastRowIndex, 13).setHorizontalAlignment("center"); // Добавил
     
     // Оборачивание текста (Wrap) для многострочных полей
     sheet.getRange(lastRowIndex, 10).setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP); // Проблема
@@ -140,6 +143,7 @@ function setupSheetHeaders(sheet) {
   sheet.setColumnWidth(10, 250); // Проблема (широкая)
   sheet.setColumnWidth(11, 280); // Работы (широкая)
   sheet.setColumnWidth(12, 120); // Цена
+  sheet.setColumnWidth(13, 140); // Добавил
 }
 
 function doGet(e) {
