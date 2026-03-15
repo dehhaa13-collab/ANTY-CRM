@@ -121,14 +121,18 @@ function updatePreviewStatus(status) {
     const badge = document.getElementById('previewStatusBadge');
     if (!badge) return;
 
-    badge.textContent = (status === 'В работе' ? '🟡 ' : status === 'Завершено' ? '🟢 ' : '🔵 ') + status;
+    const icons = {
+        'Новая': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>',
+        'В работе': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        'Завершено': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    };
+
+    badge.innerHTML = (icons[status] || icons['Новая']) + '<span>' + status + '</span>';
     
     // Снимаем старые классы
     badge.className = 'preview-status';
     
-    // Добавляем специфичный класс если нужно (в CSS я сделал общие стили для синего, 
-    // давай добавим вариации в CSS или будем менять инлайном)
-    // Лучше добавим классы в CSS
+    // Добавляем специфичный класс
     badge.classList.add('status-' + (status === 'В работе' ? 'working' : status === 'Завершено' ? 'done' : 'new'));
     
     // Маленькая анимация

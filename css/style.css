@@ -574,12 +574,12 @@ body.dark .submit-btn:disabled {
    ============================================= */
 .status-toggle {
     display: flex;
-    gap: 6px;
-    background: var(--bg-field);
+    gap: 8px;
+    background: var(--bg-toggle);
     padding: 6px;
     border-radius: 12px;
-    border: 1.5px solid var(--border-color);
-    transition: background 0.35s ease, border-color 0.35s ease;
+    border: none;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
 }
 
 .status-btn {
@@ -587,34 +587,41 @@ body.dark .submit-btn:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 8px 6px;
-    border: 1.5px solid transparent;
+    gap: 6px;
+    padding: 10px 8px;
+    border: 1px solid transparent;
     background: transparent;
     color: var(--text-secondary);
     font-size: 13px;
     font-weight: 600;
     font-family: inherit;
-    border-radius: 8px;
+    border-radius: 9px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0.6;
+}
+
+.status-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.5);
 }
 
 .status-btn.active {
     opacity: 1;
-    color: var(--text-primary);
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
 }
 
-.status-btn.active[data-status="Новая"] { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: #3b82f6; }
-.status-btn.active[data-status="В работе"] { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); color: #f59e0b; }
-.status-btn.active[data-status="Завершено"] { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #10b981; }
+.status-btn.active[data-status="Новая"] { background: #ffffff; border-color: rgba(59, 130, 246, 0.2); color: #2563eb; }
+.status-btn.active[data-status="В работе"] { background: #ffffff; border-color: rgba(245, 158, 11, 0.2); color: #d97706; }
+.status-btn.active[data-status="Завершено"] { background: #ffffff; border-color: rgba(16, 185, 129, 0.2); color: #059669; }
 
-body.dark .status-btn.active[data-status="Новая"] { background: rgba(96, 165, 250, 0.15); border-color: rgba(96, 165, 250, 0.2); color: #60a5fa; }
-body.dark .status-btn.active[data-status="В работе"] { background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-body.dark .status-btn.active[data-status="Завершено"] { background: rgba(52, 211, 153, 0.15); border-color: rgba(52, 211, 153, 0.2); color: #34d399; }
+body.dark .status-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark .status-btn.active[data-status="Новая"] { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
+body.dark .status-btn.active[data-status="В работе"] { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1); }
+body.dark .status-btn.active[data-status="Завершено"] { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: #34d399; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); }
 
 /* Status Badge */
 .preview-header {
@@ -629,32 +636,34 @@ body.dark .status-btn.active[data-status="Завершено"] { background: rgb
 }
 
 .preview-status {
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
     padding: 6px 12px;
     border-radius: 20px;
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(59, 130, 246, 0.15);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
     transition: all 0.3s ease;
 }
 
 body.dark .preview-status {
-    background: rgba(96, 165, 250, 0.15);
+    background: rgba(59, 130, 246, 0.15);
     color: #60a5fa;
-    border-color: rgba(96, 165, 250, 0.2);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
-.preview-status.status-new { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border-color: rgba(59, 130, 246, 0.2); }
-.preview-status.status-working { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.2); }
-.preview-status.status-done { background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+.preview-status.status-new { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1); }
+.preview-status.status-working { background: #fffbeb; color: #d97706; border-color: #fde68a; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1); }
+.preview-status.status-done { background: #ecfdf5; color: #059669; border-color: #a7f3d0; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1); }
 
-body.dark .preview-status.status-new { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border-color: rgba(96, 165, 250, 0.2); }
-body.dark .preview-status.status-working { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
-body.dark .preview-status.status-done { background: rgba(52, 211, 153, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.2); }
+body.dark .preview-status.status-new { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1); }
+body.dark .preview-status.status-working { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1); }
+body.dark .preview-status.status-done { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1); }
 
 /* =============================================
    Preview — Editable card
