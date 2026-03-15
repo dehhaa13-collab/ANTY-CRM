@@ -54,7 +54,7 @@ toggleManual.addEventListener('click', () => switchMode('manual'));
 function switchMode(mode) {
     hideStatus();
     const modeMap = { free: 0, photo: 1, manual: 2 };
-    const idx = modeMap[mode] ?? 0;
+    const idx = modeMap[mode] ?? 1; // Default to photo (1) if mode is unknown
 
     // Slider position
     toggleSlider.className = 'toggle-slider pos-' + idx;
@@ -69,6 +69,8 @@ function switchMode(mode) {
         sec.classList.toggle('hidden', i !== idx);
     });
 }
+// Вызываем ИИ по фото по умолчанию
+switchMode('photo');
 
 // =============================================
 // AUTO-UPPERCASE для номера авто
@@ -410,8 +412,14 @@ const photoRemoveBtn = document.getElementById('photoRemoveBtn');
 const photoUploadArea = document.getElementById('photoUploadArea');
 const photoAnalyzing = document.getElementById('photoAnalyzing');
 const photoResult = document.getElementById('photoResult');
+
 const photoResultCar = document.getElementById('photoResultCar');
 const photoResultPlate = document.getElementById('photoResultPlate');
+const photoResultVin = document.getElementById('photoResultVin');
+const photoResultMileage = document.getElementById('photoResultMileage');
+const photoResultWorks = document.getElementById('photoResultWorks');
+const photoResultDate = document.getElementById('photoResultDate');
+
 const addBtnPhoto = document.getElementById('addBtnPhoto');
 
 let currentPhotoBase64 = null;
@@ -442,6 +450,21 @@ async function handlePhotoSelect(e) {
         photoResult.classList.add('hidden');
         photoResultCar.value = '';
         photoResultPlate.value = '';
+        
+        // Prepare optional elements
+        if(photoResultVin) photoResultVin.value = '';
+        if(photoResultMileage) photoResultMileage.value = '';
+        if(photoResultWorks) photoResultWorks.value = '';
+        if(photoResultDate) {
+            const now = new Date();
+            // Format: DD.MM.YYYY HH:mm
+            const pDate = String(now.getDate()).padStart(2, '0') + '.' + 
+                          String(now.getMonth() + 1).padStart(2, '0') + '.' + 
+                          now.getFullYear() + ' ' + 
+                          String(now.getHours()).padStart(2, '0') + ':' + 
+                          String(now.getMinutes()).padStart(2, '0');
+            photoResultDate.value = pDate;
+        }
 
         // Analyze
         await analyzePhoto(currentPhotoBase64);
@@ -466,6 +489,10 @@ function resetPhotoSection() {
     photoUploadArea.classList.remove('hidden');
     photoResultCar.value = '';
     photoResultPlate.value = '';
+    if(photoResultVin) photoResultVin.value = '';
+    if(photoResultMileage) photoResultMileage.value = '';
+    if(photoResultWorks) photoResultWorks.value = '';
+    if(photoResultDate) photoResultDate.value = '';
     // Remove highlighting
     document.getElementById('photoFieldCar').classList.remove('preview-field--empty');
     document.getElementById('photoFieldPlate').classList.remove('preview-field--empty');
@@ -492,7 +519,7 @@ async function analyzePhoto(base64) {
                 messages: [
                     {
                         role: 'system',
-                        content: 'Ты помощник для автосервиса. Посмотри на фото автомобиля и верни ТОЛЬКО JSON без пояснений:\n{\n  "car": "марка и модель авто или null",\n  "plate": "госномер в формате AA 1234 BB или null"\n}\nЕсли что-то не видно на фото — верни null для этого поля.'
+                        content: 'Ты помощник для автосервиса. Посмотри на фото автомобиля и верни ТОЛЬКО JSON без пояснений:\n{\n  "car": "марка и модель авто или null",\n  "plate": "госномер в формате AA 1234 BB или null",\n  "vin": "VIN номер если виден на фото или null"\n}\nЕсли что-то не видно на фото — верни null для этого поля.'
                     },
                     {
                         role: 'user',
@@ -539,15 +566,13 @@ async function analyzePhoto(base64) {
         // Fill result fields
         photoResultCar.value = (parsed.car && parsed.car !== 'null') ? parsed.car : '';
         photoResultPlate.value = (parsed.plate && parsed.plate !== 'null') ? parsed.plate.toUpperCase() : '';
+        if(photoResultVin) {
+            photoResultVin.value = (parsed.vin && parsed.vin !== 'null') ? parsed.vin.toUpperCase() : '';
+        }
 
         // Show result card
         photoResult.classList.remove('hidden');
         highlightPhotoFields();
-
-        if (!photoResultCar.value && !photoResultPlate.value) {
-            showStatus('error', 'Не удалось распознать, заполните вручную');
-        }
-
     } catch (err) {
         showStatus('error', 'Ошибка распознавания: ' + err.message);
         photoResult.classList.remove('hidden');
@@ -560,8 +585,8 @@ async function analyzePhoto(base64) {
 function highlightPhotoFields() {
     const carField = document.getElementById('photoFieldCar');
     const plateField = document.getElementById('photoFieldPlate');
-    carField.classList.toggle('preview-field--empty', !photoResultCar.value.trim());
-    plateField.classList.toggle('preview-field--empty', !photoResultPlate.value.trim());
+    if(carField) carField.classList.toggle('preview-field--empty', !photoResultCar.value.trim());
+    if(plateField) plateField.classList.toggle('preview-field--empty', !photoResultPlate.value.trim());
 }
 
 // Remove highlighting on input
@@ -572,11 +597,10 @@ photoResultPlate.addEventListener('input', highlightPhotoFields);
 addBtnPhoto.addEventListener('click', async () => {
     const car = photoResultCar.value.trim();
     const plate = photoResultPlate.value.trim().toUpperCase();
-
-    if (!car && !plate) {
-        showStatus('error', 'Заполните хотя бы одно поле');
-        return;
-    }
+    const vin = photoResultVin ? photoResultVin.value.trim().toUpperCase() : '';
+    const mileage = photoResultMileage ? photoResultMileage.value.trim() : '';
+    const works = photoResultWorks ? photoResultWorks.value.trim() : '';
+    const pDate = photoResultDate ? photoResultDate.value.trim() : '';
 
     const payload = {
         date: formatDate(new Date()),
@@ -588,6 +612,12 @@ addBtnPhoto.addEventListener('click', async () => {
         visitDate: '',
         price: '',
         status: 'Новая',
+        
+        // Новые колонки из фото-формы
+        works: works,
+        vin: vin,
+        mileage: mileage,
+        photoDate: pDate
     };
 
     const success = await sendToSheet(payload, addBtnPhoto);

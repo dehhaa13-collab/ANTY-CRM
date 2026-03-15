@@ -174,12 +174,28 @@
                 </div>
                 <div class="photo-result-fields">
                     <div class="preview-field" id="photoFieldCar">
-                        <label for="photoResultCar">Марка авто</label>
+                        <label for="photoResultCar">Марка авто <span>(необязательно, но желательно)</span></label>
                         <input type="text" id="photoResultCar" placeholder="Не распознано">
                     </div>
                     <div class="preview-field" id="photoFieldPlate">
-                        <label for="photoResultPlate">Госномер</label>
+                        <label for="photoResultPlate">Госномер <span>(необязательно, но желательно)</span></label>
                         <input type="text" id="photoResultPlate" placeholder="Не распознано" style="text-transform: uppercase;">
+                    </div>
+                    <div class="preview-field" id="photoFieldVin">
+                        <label for="photoResultVin">VIN номер <span>(необязательно, но желательно)</span></label>
+                        <input type="text" id="photoResultVin" placeholder="Не распознано" style="text-transform: uppercase;">
+                    </div>
+                    <div class="preview-field" id="photoFieldMileage">
+                        <label for="photoResultMileage">Пробег <span>(необязательно, но желательно)</span></label>
+                        <input type="text" id="photoResultMileage" placeholder="например: 125000 км">
+                    </div>
+                    <div class="preview-field" id="photoFieldWorks">
+                        <label for="photoResultWorks">Выполненные работы <span>(необязательно, но желательно)</span></label>
+                        <textarea id="photoResultWorks" rows="3" placeholder="Опишите работы"></textarea>
+                    </div>
+                    <div class="preview-field" id="photoFieldDate">
+                        <label for="photoResultDate">Дата и время <span>(необязательно, но желательно)</span></label>
+                        <input type="text" id="photoResultDate" placeholder="дд.мм.гггг чч:мм">
                     </div>
                 </div>
                 <button id="addBtnPhoto" type="button" class="submit-btn">
